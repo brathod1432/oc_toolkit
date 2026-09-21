@@ -1,0 +1,12 @@
+{
+  "category": "engineering",
+  "generated_at": "2026-04-13T06:23:58.087748+00:00",
+  "name": "behuman",
+  "risk_categories": [
+    "network",
+    "secrets"
+  ],
+  "source_relative_path": "engineering/behuman",
+  "source_repository": "alirezarezvani",
+  "status": "opt_in_external"
+}

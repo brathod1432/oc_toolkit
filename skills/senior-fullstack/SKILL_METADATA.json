@@ -1,0 +1,13 @@
+{
+  "category": "engineering",
+  "generated_at": "2026-04-13T06:24:01.463008+00:00",
+  "name": "senior-fullstack",
+  "risk_categories": [
+    "command",
+    "network",
+    "secrets"
+  ],
+  "source_relative_path": "engineering-team/senior-fullstack",
+  "source_repository": "alirezarezvani",
+  "status": "disabled_by_default"
+}

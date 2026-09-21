@@ -1,0 +1,31 @@
+{
+  "name": "backend-api-engineer",
+  "title": "Backend API Engineer",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "backend-api-engineer",
+  "default_mode": "local-first",
+  "risk_categories": [
+    "auth",
+    "CORS",
+    "secrets",
+    "user-data",
+    "logging"
+  ],
+  "capabilities": [
+    "REST API design",
+    "schema validation",
+    "authorization boundaries",
+    "pagination and idempotency",
+    "safe error handling"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "side-effecting account or production actions"
+  ]
+}

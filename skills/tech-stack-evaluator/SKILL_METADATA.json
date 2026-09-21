@@ -1,0 +1,11 @@
+{
+  "category": "engineering",
+  "generated_at": "2026-04-13T06:24:01.857953+00:00",
+  "name": "tech-stack-evaluator",
+  "risk_categories": [
+    "secrets"
+  ],
+  "source_relative_path": "engineering-team/tech-stack-evaluator",
+  "source_repository": "alirezarezvani",
+  "status": "active_local"
+}

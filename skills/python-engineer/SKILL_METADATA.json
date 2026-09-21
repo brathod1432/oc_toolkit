@@ -1,0 +1,31 @@
+{
+  "name": "python-engineer",
+  "title": "Python Engineer",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "python-engineer",
+  "default_mode": "local-first",
+  "risk_categories": [
+    "filesystem",
+    "commands",
+    "dependencies",
+    "secrets",
+    "data-loss"
+  ],
+  "capabilities": [
+    "clean Python implementation",
+    "CLI design",
+    "file processing",
+    "typing and error handling",
+    "Python tests"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "side-effecting account or production actions"
+  ]
+}

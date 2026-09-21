@@ -1,0 +1,71 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // ── Global instructions — loaded into EVERY session on this machine ────────
+  // Each entry is a file path or glob. Content is appended to the system prompt.
+  // Glob pattern picks up all skill files without editing this file per skill.
+  "instructions": [
+    "C:/Users/kbrat/.config/opencode/instructions/00_global.md",
+    "C:/Users/kbrat/.config/opencode/instructions/01_coding.md",
+    "C:/Users/kbrat/.config/opencode/instructions/02_workflow.md",
+    "C:/Users/kbrat/.config/opencode/instructions/skills/**/*.md"
+  ],
+
+  // ── Providers ──────────────────────────────────────────────────────────────
+  // nvidiabuilds and nvidia_models are disabled; nvidia-custom is active.
+  "disabled_providers": ["nvidiabuilds", "nvidia_models"],
+
+  "provider": {
+    "nvidiabuilds": {
+      "name": "nvidiabuilds",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1"
+      },
+      "models": {
+        "nvidia/llama-3.1-nemotron-70b-instruct": {
+          "name": "nvidia/llama-3.1-nemotron-70b-instruct"
+        }
+      }
+    },
+    "nvidia_models": {
+      "name": "nvidia_models",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1"
+      },
+      "models": {
+        "nvidia/llama-3.1-nemotron-70b-instruct": {
+          "name": "nvidia/llama-3.1-nemotron-70b-instruct"
+        }
+      }
+    },
+    "nvidia-custom": {
+      "name": "nvidia-custom",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://integrate.api.nvidia.com/v1"
+      },
+      "models": {
+        "z-ai/glm-5.3": {
+          "name": "z-ai/glm-5.3"
+        },
+        "nvidia/nemotron-3.5-lightning-30b-a3b": {
+          "name": "nvidia/nemotron-3.5-lightning-30b-a3b"
+        },
+        "meta/muse-glimmer-30b": {
+          "name": "meta/muse-glimmer-30b"
+        },
+        "nvidia/nemotron-3-ultra-550b-a55b": {
+          "name": "nvidia/nemotron-3-ultra-550b-a55b"
+        },
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
+          "name": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+        },
+        "google/gemma-4-31b-it": {
+          "name": "google/gemma-4-31b-it"
+        }
+      }
+    }
+  }
+}

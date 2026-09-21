@@ -1,0 +1,13 @@
+{
+  "category": "engineering",
+  "generated_at": "2026-04-13T06:24:01.451672+00:00",
+  "name": "senior-frontend",
+  "risk_categories": [
+    "command",
+    "network",
+    "secrets"
+  ],
+  "source_relative_path": "engineering-team/senior-frontend",
+  "source_repository": "alirezarezvani",
+  "status": "disabled_by_default"
+}

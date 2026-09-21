@@ -1,0 +1,31 @@
+{
+  "name": "automation-engineer",
+  "title": "Automation Engineer",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "automation-engineer",
+  "default_mode": "local-first",
+  "risk_categories": [
+    "filesystem",
+    "commands",
+    "data-loss",
+    "secrets",
+    "scheduling"
+  ],
+  "capabilities": [
+    "workflow automation",
+    "safe filesystem operations",
+    "dry-run design",
+    "idempotent scripting",
+    "automation review"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "side-effecting account or production actions"
+  ]
+}

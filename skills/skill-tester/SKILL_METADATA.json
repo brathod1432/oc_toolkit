@@ -1,0 +1,13 @@
+{
+  "category": "engineering",
+  "generated_at": "2026-04-13T06:24:01.645974+00:00",
+  "name": "skill-tester",
+  "risk_categories": [
+    "command",
+    "network",
+    "secrets"
+  ],
+  "source_relative_path": "engineering/skill-tester",
+  "source_repository": "alirezarezvani",
+  "status": "disabled_by_default"
+}

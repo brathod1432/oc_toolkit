@@ -1,0 +1,31 @@
+{
+  "name": "fullstack-feature-builder",
+  "title": "Fullstack Feature Builder",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "fullstack-feature-builder",
+  "default_mode": "local-first",
+  "risk_categories": [
+    "filesystem",
+    "commands",
+    "secrets",
+    "user-data",
+    "database"
+  ],
+  "capabilities": [
+    "feature planning",
+    "API contract design",
+    "data-flow implementation",
+    "validation strategy",
+    "verification checklist"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "side-effecting account or production actions"
+  ]
+}

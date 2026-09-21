@@ -1,0 +1,13 @@
+{
+  "category": "engineering",
+  "generated_at": "2026-04-13T06:24:01.592868+00:00",
+  "name": "senior-security",
+  "risk_categories": [
+    "command",
+    "network",
+    "secrets"
+  ],
+  "source_relative_path": "engineering-team/senior-security",
+  "source_repository": "alirezarezvani",
+  "status": "disabled_by_default"
+}

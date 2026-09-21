@@ -1,0 +1,176 @@
+{
+  "_comment": "RBG_Runner Workflow Configuration — defines schedules, dependencies, conditions, and priorities for every agent in oc-toolkit. Edit this file to control when and in what order agents run.",
+  "timezone": "UTC",
+
+  "agents": {
+
+    "idea_planner": {
+      "description": "Decomposes a plain-English idea into an ordered task list",
+      "file": "agents/02_idea_planner.md",
+      "depends_on": [],
+      "schedule": "0 9 * * 1",
+      "_schedule_comment": "Every Monday at 09:00 UTC — weekly planning session",
+      "timezone": "UTC",
+      "conditions": [
+        "file_exists:RBG_README.md"
+      ],
+      "cooldown_minutes": 60,
+      "priority": 10,
+      "on_demand": true
+    },
+
+    "business_planning": {
+      "description": "Strategy, ICP, pricing, KPIs, go-to-market",
+      "file": "agents/03_business_planning.md",
+      "depends_on": ["idea_planner"],
+      "schedule": "0 10 * * 1",
+      "_schedule_comment": "Every Monday at 10:00 UTC — runs after idea_planner finishes",
+      "timezone": "UTC",
+      "conditions": [
+        "after:idea_planner"
+      ],
+      "cooldown_minutes": 60,
+      "priority": 20,
+      "on_demand": true
+    },
+
+    "competitor_research": {
+      "description": "Market and competitor analysis",
+      "file": "agents/04_competitor_research.md",
+      "depends_on": [],
+      "schedule": "0 9 * * 3",
+      "_schedule_comment": "Every Wednesday at 09:00 UTC — weekly competitive pulse",
+      "timezone": "UTC",
+      "conditions": [],
+      "cooldown_minutes": 1440,
+      "_cooldown_comment": "At most once per day (1440 minutes)",
+      "priority": 15,
+      "on_demand": true
+    },
+
+    "social_media": {
+      "description": "X/Twitter and LinkedIn copy",
+      "file": "agents/05_social_media.md",
+      "depends_on": ["idea_planner"],
+      "schedule": "",
+      "_schedule_comment": "On-demand only — triggered manually when content is needed",
+      "timezone": "UTC",
+      "conditions": [
+        "after:idea_planner"
+      ],
+      "cooldown_minutes": 30,
+      "priority": 30,
+      "on_demand": true
+    },
+
+    "ads_management": {
+      "description": "Google Ads and Meta campaign planning",
+      "file": "agents/06_ads_management.md",
+      "depends_on": ["business_planning"],
+      "schedule": "0 9 * * 2",
+      "_schedule_comment": "Every Tuesday at 09:00 UTC — weekly ads review",
+      "timezone": "UTC",
+      "conditions": [
+        "after:business_planning"
+      ],
+      "cooldown_minutes": 120,
+      "priority": 40,
+      "on_demand": true
+    },
+
+    "email_outreach": {
+      "description": "Cold email sequences and prospect research",
+      "file": "agents/07_email_outreach.md",
+      "depends_on": ["business_planning"],
+      "schedule": "0 8 * * 2,4",
+      "_schedule_comment": "Tuesdays and Thursdays at 08:00 UTC",
+      "timezone": "UTC",
+      "conditions": [
+        "after:business_planning"
+      ],
+      "cooldown_minutes": 60,
+      "priority": 35,
+      "on_demand": true
+    },
+
+    "customer_support": {
+      "description": "Classify and reply to customer emails",
+      "file": "agents/09_customer_support.md",
+      "depends_on": [],
+      "schedule": "0 */4 * * *",
+      "_schedule_comment": "Every 4 hours — continuous support monitoring",
+      "timezone": "UTC",
+      "conditions": [],
+      "cooldown_minutes": 15,
+      "priority": 5,
+      "_priority_comment": "Highest priority — support runs before anything else",
+      "on_demand": true
+    },
+
+    "finance": {
+      "description": "MRR, churn, LTV, spend analysis",
+      "file": "agents/10_finance.md",
+      "depends_on": [],
+      "schedule": "0 9 1 * *",
+      "_schedule_comment": "First day of every month at 09:00 UTC — monthly financial review",
+      "timezone": "UTC",
+      "conditions": [],
+      "cooldown_minutes": 1440,
+      "priority": 25,
+      "on_demand": true
+    },
+
+    "code_generation": {
+      "description": "Production code + tests",
+      "file": "agents/08_code_generation.md",
+      "depends_on": ["idea_planner", "business_planning"],
+      "schedule": "",
+      "_schedule_comment": "On-demand only — never auto-scheduled (requires human review before triggering)",
+      "timezone": "UTC",
+      "conditions": [
+        "after:idea_planner"
+      ],
+      "cooldown_minutes": 0,
+      "priority": 90,
+      "_priority_comment": "Low priority number but runs alone — see hard rules in rgb_runner.md",
+      "on_demand": true
+    },
+
+    "deployment": {
+      "description": "Render / GitHub Actions deployment plans",
+      "file": "agents/11_deployment.md",
+      "depends_on": ["code_generation"],
+      "schedule": "",
+      "_schedule_comment": "On-demand only — always runs last, always alone",
+      "timezone": "UTC",
+      "conditions": [
+        "after:code_generation"
+      ],
+      "cooldown_minutes": 30,
+      "priority": 99,
+      "_priority_comment": "Always executes last — enforced by hard rule in rgb_runner",
+      "on_demand": true
+    }
+  },
+
+  "_hard_rules": {
+    "code_generation": "Never runs in parallel with any other agent",
+    "deployment": "Always the final agent in any run; always runs alone"
+  },
+
+  "_scheduling_reference": {
+    "examples": {
+      "0 9 * * 1-5": "Weekdays at 09:00",
+      "0 9 * * 1": "Mondays at 09:00",
+      "0 9 1 * *": "1st of each month at 09:00",
+      "0 */4 * * *": "Every 4 hours",
+      "*/30 * * * *": "Every 30 minutes",
+      "''": "On-demand only (empty string = no schedule)"
+    },
+    "condition_formats": {
+      "file_exists:RBG_README.md": "Pass if RBG_README.md exists in the project root",
+      "file_missing:RBG_README.md": "Pass if RBG_README.md does NOT exist",
+      "after:idea_planner": "Pass only after idea_planner has completed this session"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "test-qa-engineer",
+  "title": "Test QA Engineer",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "test-qa-engineer",
+  "default_mode": "local-first",
+  "risk_categories": [
+    "commands",
+    "test-data",
+    "browser",
+    "secrets",
+    "flakiness"
+  ],
+  "capabilities": [
+    "unit tests",
+    "integration tests",
+    "API tests",
+    "E2E tests",
+    "QA strategy"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "side-effecting account or production actions"
+  ]
+}

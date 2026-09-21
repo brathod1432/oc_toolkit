@@ -1,0 +1,31 @@
+{
+  "name": "frontend-engineer",
+  "title": "Frontend Engineer",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "frontend-engineer",
+  "default_mode": "local-first",
+  "risk_categories": [
+    "browser",
+    "XSS",
+    "tokens",
+    "accessibility",
+    "API-data"
+  ],
+  "capabilities": [
+    "component design",
+    "form UX",
+    "state management",
+    "API integration",
+    "accessibility review"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "side-effecting account or production actions"
+  ]
+}

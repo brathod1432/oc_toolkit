@@ -1,0 +1,12 @@
+{
+  "category": "engineering",
+  "generated_at": "2026-04-13T06:23:57.906932+00:00",
+  "name": "api-test-suite-builder",
+  "risk_categories": [
+    "network",
+    "secrets"
+  ],
+  "source_relative_path": "engineering/api-test-suite-builder",
+  "source_repository": "alirezarezvani",
+  "status": "opt_in_external"
+}

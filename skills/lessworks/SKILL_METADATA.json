@@ -1,0 +1,44 @@
+{
+  "name": "lessworks",
+  "title": "LessWorks",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "lessworks",
+  "default_mode": "full",
+  "argument_hint": "[lite|full|strict|intense|audit|off]",
+  "command_levels": [
+    "lite",
+    "full",
+    "strict",
+    "intense",
+    "audit",
+    "off"
+  ],
+  "risk_categories": [
+    "filesystem",
+    "commands",
+    "security",
+    "dependencies",
+    "automation",
+    "tests"
+  ],
+  "capabilities": [
+    "smallest safe diff",
+    "dependency discipline",
+    "root-cause debugging",
+    "minimal refactoring",
+    "review and audit",
+    "safe automation",
+    "focused verification"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "new dependencies",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "high-risk auth, security, payment, migration, CI/CD, production, or customer-data changes"
+  ]
+}

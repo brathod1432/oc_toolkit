@@ -1,0 +1,128 @@
+// ============================================================
+// RBG_Runner — opencode.jsonc additive snippet
+// ============================================================
+// HOW TO MERGE THIS INTO YOUR EXISTING opencode.jsonc:
+//
+//   1. Open your opencode.jsonc:
+//        Windows: %USERPROFILE%\.config\opencode\opencode.jsonc
+//        Linux/Mac: ~/.config/opencode/opencode.jsonc
+//
+//   2. Merge ONLY the sections below that you don't already have.
+//      Do NOT replace your entire opencode.jsonc.
+//
+//   3. For the "instructions" array: ADD the new paths to your
+//      existing array — do not replace it.
+//
+//   4. Restart Open Code to activate.
+// ============================================================
+
+{
+  // ── Provider (already in your config — shown here for reference) ──
+  // If you already have the nvidia-custom provider, skip this section.
+  "providers": {
+    "nvidia-custom": {
+      // NEVER hardcode your key here — use an environment variable
+      "apiKey": "$NVIDIA_API_KEY",
+      "baseUrl": "https://integrate.api.nvidia.com/v1"
+    }
+  },
+
+  // ── Global Instructions ──────────────────────────────────────────
+  // Merge these paths into your existing "instructions" array.
+  // Paths use the %USERPROFILE% env var on Windows (auto-expanded by OpenCode).
+  "instructions": [
+    // Core global context (load order matters — globals first)
+    "%USERPROFILE%\\.config\\opencode\\skills\\00_global.md",
+    "%USERPROFILE%\\.config\\opencode\\skills\\01_coding.md",
+    "%USERPROFILE%\\.config\\opencode\\skills\\02_workflow.md",
+    "%USERPROFILE%\\.config\\opencode\\skills\\03_lessworks_active.md",
+    "%USERPROFILE%\\.config\\opencode\\skills\\04_skills_catalog.md",
+
+    // Auto-discover all skill subdirectories (SKILL.md files)
+    "%USERPROFILE%\\.config\\opencode\\skills\\**\\*.md"
+
+    // Linux/Mac equivalent (uncomment and use instead if on Linux/Mac):
+    // "$HOME/.config/opencode/skills/00_global.md",
+    // "$HOME/.config/opencode/skills/01_coding.md",
+    // "$HOME/.config/opencode/skills/02_workflow.md",
+    // "$HOME/.config/opencode/skills/03_lessworks_active.md",
+    // "$HOME/.config/opencode/skills/04_skills_catalog.md",
+    // "$HOME/.config/opencode/skills/**/*.md"
+  ],
+
+  // ── RBG_Runner Configuration ────────────────────────────────────
+  // This section is NEW — add it to your opencode.jsonc.
+  // It registers RBG_Runner as the default orchestrator and points
+  // to your workflow config and log files.
+  "rgbRunner": {
+    // Set to false to disable RBG_Runner without removing config
+    "enabled": true,
+
+    // Workflow definition file — schedules, dependencies, conditions
+    // Uses env var so it works on any machine without editing this file
+    "workflowFile": "%USERPROFILE%\\.config\\opencode\\agents\\workflow.json",
+    // Linux/Mac: "$HOME/.config/opencode/agents/workflow.json"
+
+    // Internal memory files (project-relative, gitignored)
+    "runHistoryFile": ".opencode/memory/run_history.json",
+    "logFile": ".opencode/memory/runner_log.md",
+
+    // Default timezone for schedule evaluation (overridable per-agent in workflow.json)
+    "timezone": "UTC",
+
+    // Default cooldown if an agent doesn't specify one (in minutes)
+    "defaultCooldownMinutes": 60,
+
+    // Schedule samples — these are in workflow.json, not here.
+    // Shown here for reference only.
+    "_schedulingExamples": {
+      "everyMondayAt9am":   "0 9 * * 1",
+      "weekdaysAt9am":      "0 9 * * 1-5",
+      "every4Hours":        "0 */4 * * *",
+      "firstOfEachMonth":   "0 9 1 * *",
+      "onDemandOnly":       ""
+    }
+  },
+
+  // ── Sample Agent Schedule Definitions ───────────────────────────
+  // These live in workflow.json (agents/workflow.json), NOT here.
+  // Shown below as documentation of what each agent's config looks like.
+  //
+  // Agent: customer_support — highest priority, runs every 4 hours
+  // {
+  //   "customer_support": {
+  //     "schedule": "0 */4 * * *",
+  //     "timezone": "UTC",
+  //     "cooldown_minutes": 15,
+  //     "priority": 5,
+  //     "depends_on": [],
+  //     "conditions": [],
+  //     "on_demand": true
+  //   }
+  // }
+  //
+  // Agent: idea_planner — weekly planning, Monday mornings
+  // {
+  //   "idea_planner": {
+  //     "schedule": "0 9 * * 1",
+  //     "timezone": "UTC",
+  //     "cooldown_minutes": 60,
+  //     "priority": 10,
+  //     "depends_on": [],
+  //     "conditions": ["file_exists:RBG_README.md"],
+  //     "on_demand": true
+  //   }
+  // }
+  //
+  // Agent: deployment — on-demand only, always runs last and alone
+  // {
+  //   "deployment": {
+  //     "schedule": "",
+  //     "depends_on": ["code_generation"],
+  //     "conditions": ["after:code_generation"],
+  //     "cooldown_minutes": 30,
+  //     "priority": 99,
+  //     "on_demand": true
+  //   }
+  // }
+}

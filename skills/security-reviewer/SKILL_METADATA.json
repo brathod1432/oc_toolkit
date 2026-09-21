@@ -1,0 +1,31 @@
+{
+  "name": "security-reviewer",
+  "title": "Security Reviewer",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "security-reviewer",
+  "default_mode": "local-first",
+  "risk_categories": [
+    "secrets",
+    "auth",
+    "web-security",
+    "dependencies",
+    "privacy"
+  ],
+  "capabilities": [
+    "secure code review",
+    "auth review",
+    "OWASP risk analysis",
+    "secret handling",
+    "dependency risk review"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "side-effecting account or production actions"
+  ]
+}

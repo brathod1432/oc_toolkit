@@ -1,0 +1,31 @@
+{
+  "name": "devops-observability-engineer",
+  "title": "DevOps Observability Engineer",
+  "category": "developer-engineering",
+  "status": "ready",
+  "license": "MIT",
+  "source_relative_path": "devops-observability-engineer",
+  "default_mode": "local-first",
+  "risk_categories": [
+    "deployment",
+    "cloud",
+    "secrets",
+    "commands",
+    "availability"
+  ],
+  "capabilities": [
+    "Docker review",
+    "CI checks",
+    "environment configuration",
+    "observability design",
+    "rollback planning"
+  ],
+  "requires_user_approval_for": [
+    "network access",
+    "package installation",
+    "destructive operations",
+    "cross-workspace file access",
+    "secret, token, cookie, credential, or browser profile access",
+    "side-effecting account or production actions"
+  ]
+}

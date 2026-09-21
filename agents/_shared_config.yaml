@@ -1,0 +1,51 @@
+# Polsia — Shared Agent Defaults
+# All agent YAML frontmatter inherits these values unless overridden.
+
+# LLM
+model: meta/llama-3.1-70b-instruct
+model_provider: nvidia
+base_url: https://integrate.api.nvidia.com/v1
+max_tokens: 4096
+temperature: 0.2
+timeout_secs: 120
+
+# Execution
+max_retries: 2
+retry_backoff_secs: 5
+sandbox_safe: true          # override to false for agents that make real API calls
+enabled: true
+
+# Logging
+log_level: INFO
+log_inputs: true            # log task dict on entry
+log_outputs: true           # log result dict on exit
+log_llm_calls: false        # set true during debugging (verbose)
+
+# Output contract — every agent MUST return these keys
+required_output_keys:
+  - summary                 # str: one-sentence human-readable result
+  - status                  # str: "success" | "failed" | "skipped"
+
+# Optional output keys used by specific agents
+optional_output_keys:
+  - files_written           # list[str]: code_generation
+  - test_result             # dict:      code_generation
+  - pr_url                  # str:       code_generation
+  - deployed                # bool:      deployment
+  - deploy_url              # str:       deployment
+  - posts_created           # list:      social_media
+  - emails_sent             # int:       email_outreach
+  - report                  # dict:      finance, competitor_research
+  - plan                    # dict:      business_planning
+
+# Celery task routing
+celery_queue: agents
+task_acks_late: true
+task_reject_on_worker_lost: true
+
+# SANDBOX guard — when SANDBOX_MODE=true, agents must NOT:
+#   - make real HTTP calls to external APIs
+#   - write to production databases
+#   - send real emails, tweets, or ad spend
+#   - push code to GitHub
+# They MUST return a result with summary beginning "[SANDBOX]"

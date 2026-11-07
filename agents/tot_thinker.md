@@ -1,8 +1,9 @@
 ---
 name: tot_thinker
-description: "Tree of Thoughts individual reasoning agent. Operates in two rounds: Round 1 generates an independent position on a problem using an assigned role seed and temperature profile; Round 2 receives all three thinkers' Round 1 outputs and either defends its own position, concedes to a stronger one, or synthesizes a partial revision. Never deployed directly — always dispatched by tot_controller in sets of three."
-model: nvidia/"z-ai/glm-5.3-flash
+description: "DISABLED — not used. tot_controller is self-contained and simulates all three thinkers in one call, so it never dispatches this agent. Kept for reference only. Original role: Tree of Thoughts individual reasoning agent. Operates in two rounds: Round 1 generates an independent position on a problem using an assigned role seed and temperature profile; Round 2 receives all three thinkers' Round 1 outputs and either defends its own position, concedes to a stronger one, or synthesizes a partial revision. Never deployed directly — always dispatched by tot_controller in sets of three."
+model: nvidia/z-ai/glm-5.3-flash
 mode: subagent
+disable: true
 temperature: 0.5
 tools:
   read: true

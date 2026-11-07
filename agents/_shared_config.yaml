@@ -25,6 +25,18 @@ log_llm_calls: false        # set true during debugging (verbose)
 required_output_keys:
   - summary                 # str: one-sentence human-readable result
   - status                  # str: "success" | "failed" | "skipped"
+  - handoff                 # the === HANDOFF === block every worker ends with (see handoff_fields)
+
+# Structured handoff — every worker ends its output with this block so the next
+# agent (and the validator) inherits what happened instead of relying on memory.
+handoff_fields:
+  - completed               # what was actually finished
+  - not_done                # in-scope work left unfinished, and why
+  - commands_run            # every command with its exit code
+  - files_changed           # every file created or modified
+  - issues_found            # problems discovered, including out-of-scope ones
+  - assertions              # per validation-contract assertion: MET / NOT MET / UNSURE + evidence
+  - procedure               # FOLLOWED, or every deviation and why
 
 # Optional output keys used by specific agents
 optional_output_keys:
@@ -37,6 +49,7 @@ optional_output_keys:
   - emails_sent             # int:       email_outreach
   - report                  # dict:      finance, competitor_research
   - plan                    # dict:      business_planning
+  - assertion_results       # dict:      grounded_review, user_testing_validator (A1: PASS | FAIL | ...)
 
 # Celery task routing
 celery_queue: agents

@@ -2,17 +2,28 @@
   "$schema": "https://opencode.ai/config.json",
 
   // ── Global instructions — loaded into EVERY session on this machine ────────
-  // Each entry is a file path or glob. Content is appended to the system prompt.
-  // Glob pattern picks up all skill files without editing this file per skill.
+  // Each entry is a file or glob appended to the system prompt.
+  // Load order matters: global identity first, then coding standards, then skills.
+  // ~ expands to the home directory on both Windows (%USERPROFILE%) and Linux/macOS ($HOME).
   "instructions": [
-    "C:/Users/kbrat/.config/opencode/instructions/00_global.md",
-    "C:/Users/kbrat/.config/opencode/instructions/01_coding.md",
-    "C:/Users/kbrat/.config/opencode/instructions/02_workflow.md",
-    "C:/Users/kbrat/.config/opencode/instructions/skills/**/*.md"
+    // ── Core global context (load in order) ──────────────────────────────────
+    "~/.config/opencode/skills/00_global.md",
+    "~/.config/opencode/skills/01_coding.md",
+    "~/.config/opencode/skills/02_workflow.md",
+    "~/.config/opencode/skills/03_lessworks_active.md",
+    "~/.config/opencode/skills/04_skills_catalog.md",
+
+    // ── Flat skill files (patterns, templates) ────────────────────────────────
+    "~/.config/opencode/skills/fastapi_crud.md",
+    "~/.config/opencode/skills/nvidia_api.md",
+
+    // ── Auto-discover every SKILL.md in named skill subdirectories ────────────
+    "~/.config/opencode/skills/**/*.md"
   ],
 
   // ── Providers ──────────────────────────────────────────────────────────────
   // nvidiabuilds and nvidia_models are disabled; nvidia-custom is active.
+  // API key is read from the NVIDIA_API_KEY environment variable — never hardcode it here.
   "disabled_providers": ["nvidiabuilds", "nvidia_models"],
 
   "provider": {
@@ -66,6 +77,57 @@
           "name": "google/gemma-4-31b-it"
         }
       }
+    }
+  },
+
+  // ── RBG_Runner Orchestrator ────────────────────────────────────────────────
+  // Configuration for the intelligent agent orchestrator.
+  // The orchestrator agent file is: agents/rgb_runner.md
+  // The standalone Python runner is: agents/rgb_runner.py
+  //
+  // Run once:       python agents/rgb_runner.py
+  // Dry-run audit:  python agents/rgb_runner.py --dry-run
+  // List agents:    python agents/rgb_runner.py --list
+  // Background:     python agents/rgb_runner.py --cycles 10 --interval 60
+  //                   (asks for human approval before starting the loop)
+  "rgbRunner": {
+    // Set to false to disable the orchestrator without removing this config
+    "enabled": true,
+
+    // Path to the dependency + scheduling graph for all agents.
+    // ~ expands to the home directory on both Windows and Linux/macOS.
+    "workflowFile": "~/.config/opencode/agents/workflow.json",
+
+    // Internal memory files — kept in .opencode/ (which must be gitignored).
+    // These paths are relative to the project root (no ~ needed).
+    "runHistoryFile": ".opencode/memory/run_history.json",
+    "logFile":        ".opencode/memory/runner_log.md",
+
+    // Default timezone for cron schedule evaluation (overridable per-agent in workflow.json)
+    "timezone": "UTC",
+
+    // Fallback cooldown if an agent in workflow.json doesn't specify one
+    "defaultCooldownMinutes": 60,
+
+    // Background execution gate — NEVER bypassed.
+    // Loops only start after explicit human approval in the current session.
+    // If running unattended (cron / Task Scheduler), always falls back to SINGLE RUN.
+    "backgroundGate": {
+      "requireApproval": true,
+      "fallbackIfUnattended": "SINGLE_RUN"
+    },
+
+    // The agent that acts as the top-level orchestrator entry point.
+    "entryAgent": "RBG_Runner",
+    "entryAgentFile": "~/.config/opencode/agents/rgb_runner.md",
+
+    // Scheduling reference (informational — actual schedules live in workflow.json)
+    "_schedulingExamples": {
+      "everyMondayAt9am":   "0 9 * * 1",
+      "weekdaysAt9am":      "0 9 * * 1-5",
+      "every4Hours":        "0 */4 * * *",
+      "firstOfEachMonth":   "0 9 1 * *",
+      "onDemandOnly":       ""
     }
   }
 }

@@ -21,12 +21,16 @@ Protocol : OpenAI-compatible (uses @ai-sdk/openai-compatible in opencode)
 
 | Model ID | Best for | Temp |
 |---|---|---|
-| `nvidia/nemotron-3-ultra-550b-a55b` | Reasoning, code, planning | 0.1–0.3 |
-| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | Math, finance, step-by-step | 0.0–0.1 |
-| `nvidia/nemotron-3.5-lightning-30b-a3b` | Fast lightweight tasks | 0.2–0.4 |
-| `meta/muse-glimmer-30b` | Creative, social, email | 0.7–0.9 |
-| `google/gemma-4-31b-it` | Structured output, ads | 0.3–0.5 |
-| `z-ai/glm-5.3` | Classification, support | 0.2–0.4 |
+| `nvidia/nemotron-3-super-120b-a12b` | Planning, research, orchestration (~5s) | 0.1–0.3 |
+| `nvidia/nemotron-3-ultra-550b-a55b` | Code, hardest reasoning (~5–13s) | 0.1–0.3 |
+| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | Math, finance, step-by-step (~4s) | 0.0–0.1 |
+| `nvidia/nemotron-3.5-lightning-30b-a3b` | Fast lightweight tasks (~5s) | 0.2–0.4 |
+| `meta/muse-glimmer-30b` | Creative, social, email (~8–16s) | 0.7–0.9 |
+| `z-ai/glm-5.3` | Validation, classification (~5–11s) | 0.1–0.4 |
+| `openai/gpt-oss-20b` | Backup validator / coder (~8s) | 0.1–0.3 |
+
+Not usable as of 2026-09-24: `google/gemma-4-31b-it` (times out), `z-ai/glm-5.3-flash` (works but 30–55s).
+Many older catalog models return 410 "end of life" — re-check with `test_models.ps1`.
 
 ---
 

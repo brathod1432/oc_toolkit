@@ -1,12 +1,121 @@
 {
   "_comment": "RBG_Runner Workflow Configuration — defines schedules, dependencies, conditions, and priorities for every agent in oc-toolkit. Edit this file to control when and in what order agents run.",
   "timezone": "UTC",
-
+  "_model_comment": "OpenCode allows one model per agent (the `model:` line in each agent file = the first entry below). These ordered lists are the backups: rgb_runner.py and the agents retry with the next model when one is retired (410), missing (404), rate-limited (429 after one wait) or times out. heal_models.ps1 sets each agent's `model:` line to the first working entry. Model IDs use OpenCode's built-in 'nvidia' provider. Verified working 2026-09-24. 2026-10-30: nvidia/nvidia/nemotron-3-super-120b-a12b retired by NVIDIA (Model unavailable) — replaced by nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b.",
+  "model_policy": {
+    "timeout_secs": 300,
+    "rate_limit_wait_secs": 15,
+    "retry_same_model_on_rate_limit": 1,
+    "fallback_on": [
+      "410 Gone / end of life",
+      "404 Not Found / model not found",
+      "429 rate limit (after one wait)",
+      "5xx server error",
+      "timeout",
+      "empty output"
+    ],
+    "do_not_fallback_on": [
+      "permission rejected",
+      "the agent's own task failure (bad output, failed tests)"
+    ]
+  },
+  "model_fallbacks": {
+    "Orchestrator": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "RBG_Runner": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "idea_planner": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "business_planning": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "competitor_research": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "code_generation": [
+      "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/openai/gpt-oss-20b"
+    ],
+    "deployment": [
+      "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "ads_management": [
+      "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "customer_support": [
+      "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "finance": [
+      "nvidia/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "social_media": [
+      "nvidia/meta/muse-glimmer-30b",
+      "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "email_outreach": [
+      "nvidia/meta/muse-glimmer-30b",
+      "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "linkedin": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/meta/muse-glimmer-30b",
+      "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "nvidia/z-ai/glm-5.3"
+    ],
+    "grounded_review": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/z-ai/glm-5.3",
+      "nvidia/openai/gpt-oss-20b"
+    ],
+    "user_testing_validator": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/z-ai/glm-5.3",
+      "nvidia/openai/gpt-oss-20b"
+    ],
+    "tot_controller": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/z-ai/glm-5.3",
+      "nvidia/openai/gpt-oss-20b"
+    ],
+    "tot_thinker": [
+      "nvidia/z-ai/glm-5.3",
+      "nvidia/openai/gpt-oss-20b",
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b"
+    ],
+    "image_generation": [
+      "nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "nvidia/z-ai/glm-5.3",
+      "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b"
+    ]
+  },
   "agents": {
-
     "idea_planner": {
       "description": "Decomposes a plain-English idea into an ordered task list",
-      "file": "agents/02_idea_planner.md",
+      "file": "~/.config/opencode/agents/02_idea_planner.md",
       "depends_on": [],
       "schedule": "0 9 * * 1",
       "_schedule_comment": "Every Monday at 09:00 UTC — weekly planning session",
@@ -18,11 +127,12 @@
       "priority": 10,
       "on_demand": true
     },
-
     "business_planning": {
       "description": "Strategy, ICP, pricing, KPIs, go-to-market",
-      "file": "agents/03_business_planning.md",
-      "depends_on": ["idea_planner"],
+      "file": "~/.config/opencode/agents/03_business_planning.md",
+      "depends_on": [
+        "idea_planner"
+      ],
       "schedule": "0 10 * * 1",
       "_schedule_comment": "Every Monday at 10:00 UTC — runs after idea_planner finishes",
       "timezone": "UTC",
@@ -33,10 +143,9 @@
       "priority": 20,
       "on_demand": true
     },
-
     "competitor_research": {
       "description": "Market and competitor analysis",
-      "file": "agents/04_competitor_research.md",
+      "file": "~/.config/opencode/agents/04_competitor_research.md",
       "depends_on": [],
       "schedule": "0 9 * * 3",
       "_schedule_comment": "Every Wednesday at 09:00 UTC — weekly competitive pulse",
@@ -47,11 +156,12 @@
       "priority": 15,
       "on_demand": true
     },
-
     "social_media": {
       "description": "X/Twitter and LinkedIn copy",
-      "file": "agents/05_social_media.md",
-      "depends_on": ["idea_planner"],
+      "file": "~/.config/opencode/agents/05_social_media.md",
+      "depends_on": [
+        "idea_planner"
+      ],
       "schedule": "",
       "_schedule_comment": "On-demand only — triggered manually when content is needed",
       "timezone": "UTC",
@@ -62,11 +172,12 @@
       "priority": 30,
       "on_demand": true
     },
-
     "ads_management": {
       "description": "Google Ads and Meta campaign planning",
-      "file": "agents/06_ads_management.md",
-      "depends_on": ["business_planning"],
+      "file": "~/.config/opencode/agents/06_ads_management.md",
+      "depends_on": [
+        "business_planning"
+      ],
       "schedule": "0 9 * * 2",
       "_schedule_comment": "Every Tuesday at 09:00 UTC — weekly ads review",
       "timezone": "UTC",
@@ -77,11 +188,12 @@
       "priority": 40,
       "on_demand": true
     },
-
     "email_outreach": {
       "description": "Cold email sequences and prospect research",
-      "file": "agents/07_email_outreach.md",
-      "depends_on": ["business_planning"],
+      "file": "~/.config/opencode/agents/07_email_outreach.md",
+      "depends_on": [
+        "business_planning"
+      ],
       "schedule": "0 8 * * 2,4",
       "_schedule_comment": "Tuesdays and Thursdays at 08:00 UTC",
       "timezone": "UTC",
@@ -92,10 +204,9 @@
       "priority": 35,
       "on_demand": true
     },
-
     "customer_support": {
       "description": "Classify and reply to customer emails",
-      "file": "agents/09_customer_support.md",
+      "file": "~/.config/opencode/agents/09_customer_support.md",
       "depends_on": [],
       "schedule": "0 */4 * * *",
       "_schedule_comment": "Every 4 hours — continuous support monitoring",
@@ -106,10 +217,9 @@
       "_priority_comment": "Highest priority — support runs before anything else",
       "on_demand": true
     },
-
     "finance": {
       "description": "MRR, churn, LTV, spend analysis",
-      "file": "agents/10_finance.md",
+      "file": "~/.config/opencode/agents/10_finance.md",
       "depends_on": [],
       "schedule": "0 9 1 * *",
       "_schedule_comment": "First day of every month at 09:00 UTC — monthly financial review",
@@ -119,11 +229,13 @@
       "priority": 25,
       "on_demand": true
     },
-
     "code_generation": {
-      "description": "Production code + tests",
-      "file": "agents/08_code_generation.md",
-      "depends_on": ["idea_planner", "business_planning"],
+      "description": "Production code + tests — always runs alone",
+      "file": "~/.config/opencode/agents/08_code_generation.md",
+      "depends_on": [
+        "idea_planner",
+        "business_planning"
+      ],
       "schedule": "",
       "_schedule_comment": "On-demand only — never auto-scheduled (requires human review before triggering)",
       "timezone": "UTC",
@@ -132,14 +244,15 @@
       ],
       "cooldown_minutes": 0,
       "priority": 90,
-      "_priority_comment": "Low priority number but runs alone — see hard rules in rgb_runner.md",
+      "_priority_comment": "Runs alone per hard rule in rgb_runner — never in parallel",
       "on_demand": true
     },
-
     "deployment": {
-      "description": "Render / GitHub Actions deployment plans",
-      "file": "agents/11_deployment.md",
-      "depends_on": ["code_generation"],
+      "description": "Render / GitHub Actions deployment plans — always runs last and alone",
+      "file": "~/.config/opencode/agents/11_deployment.md",
+      "depends_on": [
+        "code_generation"
+      ],
       "schedule": "",
       "_schedule_comment": "On-demand only — always runs last, always alone",
       "timezone": "UTC",
@@ -150,22 +263,93 @@
       "priority": 99,
       "_priority_comment": "Always executes last — enforced by hard rule in rgb_runner",
       "on_demand": true
+    },
+    "grounded_review": {
+      "description": "Default child validator. RBG_Runner runs it automatically after every worker (see rgb_runner.md Worker → Validator Pairing); it can also be chained explicitly via depends_on.",
+      "file": "~/.config/opencode/agents/grounded_review.md",
+      "depends_on": [],
+      "_depends_on_comment": "Set depends_on to the agent(s) whose output you want reviewed, e.g. ['idea_planner']",
+      "schedule": "",
+      "_schedule_comment": "On-demand only — always chained explicitly after the agent being reviewed",
+      "timezone": "UTC",
+      "conditions": [],
+      "cooldown_minutes": 0,
+      "priority": 50,
+      "on_demand": true
+    },
+    "linkedin": {
+      "description": "All LinkedIn operations — posts, comments, replies, profile, analytics. Always draft → user approval → publish.",
+      "file": "~/.config/opencode/agents/12_linkedin.md",
+      "depends_on": [],
+      "schedule": "",
+      "_schedule_comment": "On-demand only — publishing always needs explicit user approval",
+      "timezone": "UTC",
+      "conditions": [],
+      "cooldown_minutes": 30,
+      "priority": 32,
+      "on_demand": true
+    },
+    "user_testing_validator": {
+      "description": "Milestone behavior validator — starts the app and checks the milestone's behavior assertions against the running app. Only used inside missions, after a milestone's tasks are done.",
+      "file": "~/.config/opencode/agents/user_testing_validator.md",
+      "depends_on": [],
+      "schedule": "",
+      "_schedule_comment": "On-demand only — invoked by the mission loop at milestone boundaries, never scheduled",
+      "timezone": "UTC",
+      "conditions": [],
+      "cooldown_minutes": 0,
+      "priority": 55,
+      "on_demand": true
+    },
+    "tot_controller": {
+      "description": "Tree-of-Thought reasoning controller — self-contained: simulates three thinker perspectives (conservative / balanced / creative) in two rounds within one call and synthesises a verdict. Use for complex decisions requiring explored alternatives.",
+      "file": "~/.config/opencode/agents/tot_controller.md",
+      "depends_on": [],
+      "schedule": "",
+      "_schedule_comment": "On-demand only — triggered when a task benefits from multi-path reasoning",
+      "timezone": "UTC",
+      "conditions": [],
+      "cooldown_minutes": 0,
+      "priority": 12,
+      "_priority_comment": "Runs early — its output can feed downstream agents such as business_planning",
+      "on_demand": true
+    },
+    "image_generation": {
+      "description": "Images from text — NVIDIA FLUX.3 Image Klein, auto-fallback FLUX.2 Klein 4B (tools/nvidia_image_gen.py)",
+      "file": "~/.config/opencode/agents/13_image_generation.md",
+      "depends_on": [],
+      "schedule": "",
+      "_schedule_comment": "On-demand only — generates images when a task asks for them",
+      "timezone": "UTC",
+      "conditions": [],
+      "cooldown_minutes": 0,
+      "priority": 33,
+      "on_demand": true
     }
   },
-
   "_hard_rules": {
-    "code_generation": "Never runs in parallel with any other agent",
-    "deployment": "Always the final agent in any run; always runs alone"
+    "code_generation": "Never runs in parallel with any other agent — always runs alone in its own cycle",
+    "deployment": "Always the final agent in any run; always runs alone; requires code_generation to have completed this session",
+    "grounded_review": "Default child validator — always runs after the worker it checks, never before or alongside it",
+    "user_testing_validator": "Runs only at a mission milestone boundary, after every task in the milestone passed its own validator; never edits code; local targets only",
+    "handoffs": "Every worker ends its output with a === HANDOFF === block; a missing handoff fails validation",
+    "validators": "Every triggered worker is checked by a child validator before it counts as completed (grounded_review, or contract_check for idea_planner / tot_controller / Orchestrator). Add \"validator\": \"grounded_review\" | \"contract_check\" to an agent entry to override the default."
   },
-
+  "_agent_notes": {
+    "missions": "Long goals run as missions: Orchestrator plans (scope → contract → milestones), each background cycle advances one step, state in .opencode/memory/missions/",
+    "tot_thinker": "Disabled (disable: true) and unused — tot_controller is self-contained and never calls it. Not scheduled by RBG_Runner.",
+    "Orchestrator": "Sub-agent (01_orchestrator.md) used by RBG-Dev-seq, RBG-Dev-Parallel and rbg-fable-5.1 to plan worker + validator pairs — not directly scheduled by RBG_Runner. Replaces the former orchestrator_parallel.",
+    "RBG-Dev-seq / RBG-Dev-Parallel / rbg-fable-5.1": "Primary dev agents — user-selected entry points, not scheduled by RBG_Runner",
+    "RBG_Runner": "Self — excluded from the evaluation loop"
+  },
   "_scheduling_reference": {
     "examples": {
-      "0 9 * * 1-5": "Weekdays at 09:00",
-      "0 9 * * 1": "Mondays at 09:00",
-      "0 9 1 * *": "1st of each month at 09:00",
+      "0 9 * * 1-5": "Weekdays at 09:00 UTC",
+      "0 9 * * 1": "Mondays at 09:00 UTC",
+      "0 9 1 * *": "1st of each month at 09:00 UTC",
       "0 */4 * * *": "Every 4 hours",
       "*/30 * * * *": "Every 30 minutes",
-      "''": "On-demand only (empty string = no schedule)"
+      "\"\"": "On-demand only (empty string = no schedule)"
     },
     "condition_formats": {
       "file_exists:RBG_README.md": "Pass if RBG_README.md exists in the project root",

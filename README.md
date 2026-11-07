@@ -24,12 +24,11 @@ oc-toolkit/
 │   ├── rgb_runner.md           ← RBG_Runner — top-level orchestrator (OpenCode agent)
 │   ├── rgb_runner.py           ← RBG_Runner — standalone Python orchestrator
 │   ├── workflow.json           ← Scheduling graph: deps, crons, conditions, cooldowns
-│   ├── RBG-Dev.md
-│   ├── RBG-Dev-Parallel.md
-│   ├── rbg-fable-5.1.md
+│   ├── RBG-Dev-seq.md          ← Primary dev agent — sequential
+│   ├── RBG-Dev-Parallel.md     ← Primary dev agent — parallel task-sets
+│   ├── rbg-fable-5.1.md        ← Primary dev agent — sequential, Fable 5.1
 │   ├── tot_controller.md
-│   ├── 01_orchestrator.md
-│   ├── 02_orchestrator_parallel.md
+│   ├── 01_orchestrator.md      ← Planner: worker + validator pairs (sequential or parallel)
 │   ├── 02_idea_planner.md
 │   ├── 03_business_planning.md
 │   ├── 04_competitor_research.md
@@ -40,7 +39,9 @@ oc-toolkit/
 │   ├── 09_customer_support.md
 │   ├── 10_finance.md
 │   ├── 11_deployment.md
-│   ├── grounded_review.md
+│   ├── 12_linkedin.md
+│   ├── grounded_review.md      ← Default child validator (task / milestone / contract review)
+│   ├── user_testing_validator.md ← Milestone behavior validator (runs the app)
 │   └── tot_thinker.md
 │
 └── skills/
@@ -101,13 +102,11 @@ These agents can be selected directly in the OpenCode UI or CLI. They have full 
 
 | Agent | File | Description |
 |---|---|---|
-| **RBG_Runner** | `rgb_runner.md` | Top-level orchestrator. Discovers all agents, evaluates the workflow graph, and triggers ready agents in dependency order. Entry point for all automated and on-demand execution. Supports three execution modes: SINGLE RUN (default), BACKGROUND_HUMAN_REQUESTED, and BACKGROUND_PROPOSED (agent-initiated, requires explicit human approval). |
-| **RBG-Dev** | `RBG-Dev.md` | Primary development agent. Full-stack coding, debugging, refactoring, and code review. Main agent for software development tasks. Reads `RBG_README.md` at session start, writes to `RBG_changelog.md`, respects `lessworks` (smallest-safe-diff) philosophy. |
-| **RBG-Dev-Parallel** | `RBG-Dev-Parallel.md` | Parallel variant of RBG-Dev. Designed for concurrent sub-task execution when multiple independent coding tasks can be dispatched simultaneously. |
-| **RBG Fable 5.1** | `rbg-fable-5.1.md` | Fable model variant of the dev agent. Uses the Fable 5.1 model for tasks where that model's characteristics are preferred. |
-| **Orchestrator** | `01_orchestrator.md` | Task router. Receives a high-level goal, decomposes it into subtasks, and routes each subtask to the appropriate specialist sub-agent. Sequential execution. |
-| **Orchestrator Parallel** | `02_orchestrator_parallel.md` | Parallel task router. Same as Orchestrator but dispatches independent subtasks concurrently for faster throughput. |
-| **ToT Controller** | `tot_controller.md` | Tree-of-Thought controller. Spawns multiple `tot_thinker` sub-agents with different reasoning paths, collects their outputs, evaluates the branches, and synthesises the best answer. Use for complex decisions requiring diverse reasoning. |
+| **RBG_Runner** | `rgb_runner.md` | Top-level orchestrator. Discovers all agents, evaluates the workflow graph, and triggers ready agents in dependency order. Every triggered agent runs as a worker and must pass its validator (`grounded_review` / `contract_check`) before it counts as completed. Entry point for all automated and on-demand execution. Supports three execution modes: SINGLE RUN (default), BACKGROUND_HUMAN_REQUESTED, and BACKGROUND_PROPOSED (agent-initiated, requires explicit human approval). |
+| **RBG-Dev-seq** | `RBG-Dev-seq.md` | Primary development agent — sequential. Plans through the Orchestrator and runs each task as worker → validator, one at a time. Full-stack coding, debugging, refactoring, and code review. Main agent for software development tasks. Reads `RBG_README.md` at session start, writes to `RBG_changelog.md`, respects `lessworks` (smallest-safe-diff) philosophy. |
+| **RBG-Dev-Parallel** | `RBG-Dev-Parallel.md` | Parallel variant of RBG-Dev-seq (uses `BD_*` memory files). Designed for concurrent sub-task execution when multiple independent coding tasks can be dispatched simultaneously. |
+| **RBG Fable 5.1** | `rbg-fable-5.1.md` | Sequential dev agent for Claude Fable 5.1 — same full workflow as RBG-Dev-Parallel (session resume, atomisation, ToT gate, grounded review, git checkpoints) but one task at a time. Uses `BD_*` memory files. |
+| **ToT Controller** | `tot_controller.md` | Tree-of-Thought controller. Self-contained: simulates three thinker perspectives (conservative / balanced / creative) in two rounds within one call and synthesises a weighted verdict. Use for complex decisions requiring diverse reasoning. |
 
 ---
 
@@ -117,6 +116,7 @@ These agents are invoked by orchestrators or by RBG_Runner. They are not selecte
 
 | Agent | File | Description |
 |---|---|---|
+| **Orchestrator** | `01_orchestrator.md` | Planner (sub-agent). Turns a goal into tasks where each task is a child **worker** (the domain agent) plus a child **validator** (`grounded_review` or `contract_check`) that must pass before the task counts as done. Returns a flat task list (`EXECUTION_MODE: sequential`) or grouped task-sets (`parallel`). |
 | **Idea Planner** | `02_idea_planner.md` | Decomposes a high-level idea or goal into an ordered list of actionable tasks. Produces a structured task list that downstream agents can consume. |
 | **Business Planning** | `03_business_planning.md` | Builds a business plan from a product or idea brief. Covers strategy, ideal customer profile (ICP), pricing model, KPIs, and go-to-market (GTM) approach. |
 | **Competitor Research** | `04_competitor_research.md` | Researches the competitive landscape for a product or market. Produces structured competitor profiles: positioning, pricing, strengths, weaknesses, and differentiation opportunities. |
@@ -126,9 +126,12 @@ These agents are invoked by orchestrators or by RBG_Runner. They are not selecte
 | **Code Generation** | `08_code_generation.md` | Generates production-ready code and tests from a specification. **Hard rule: always runs alone — never in parallel with any other agent.** Produces code with full test coverage and documentation. |
 | **Customer Support** | `09_customer_support.md` | Classifies incoming customer support emails by topic and urgency, then drafts appropriate replies. Can be run on a schedule (default: every 4 hours) for inbox triage. |
 | **Finance** | `10_finance.md` | Analyses business financial metrics: MRR, churn, LTV, CAC, burn rate, and spend breakdown. Takes raw data or summaries and produces structured financial reports. |
+| **LinkedIn** | `12_linkedin.md` | All LinkedIn operations: posts, comments, replies, humanizing, hooks, content calendar, thread monitoring, engager analytics, profile optimisation, advocacy, repurposing, interviewing. Always draft → user approval → publish. |
+| **Image Generation** | `13_image_generation.md` | Images from text with NVIDIA's hosted **FLUX.3 Image Klein**, falling back automatically to **FLUX.2 Klein 4B** if it is down, via `tools/nvidia_image_gen.py`. Writes the visual prompt, picks a valid size (multiples of 16, 512–1568 px), saves JPEGs to `assets/images/`, returns paths + seeds. Text-to-image only — the hosted API can't edit your own images. |
 | **Deployment** | `11_deployment.md` | Handles deployment to Render and GitHub Actions. **Hard rule: always runs last in any session and always runs alone.** Manages environment config, deployment scripts, and rollback procedures. |
-| **Grounded Review** | `grounded_review.md` | Reviews generated content, plans, or code against stated requirements and real-world constraints. Produces a grounded assessment that separates confident findings from uncertain ones. |
-| **ToT Thinker** | `tot_thinker.md` | Individual reasoning node in a Tree-of-Thought system. Receives a problem and a specific reasoning path, explores that path to a conclusion, and returns a structured result for the ToT Controller to evaluate. |
+| **User Testing Validator** | `user_testing_validator.md` | Milestone behavior validator for missions (model `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b`). Starts the app, checks each behavior assertion in the milestone's validation contract against the running app (HTTP / CLI / Playwright), probes implied edge cases, scans logs, stops the app, and reports PASS / FAIL / BLOCKED per assertion with reproduction steps. Never edits code; local targets only. |
+| **Grounded Review** | `grounded_review.md` | Default child validator. Audits any worker's output — claims, files actually written, and optional acceptance criteria (`GR_CRITERIA`) — and returns PROCEED / VERIFY_FLAGGED / BLOCK_AND_REDO. |
+| **ToT Thinker** | `tot_thinker.md` | **Disabled (`disable: true`), unused.** Kept for reference — `tot_controller` is self-contained and never calls it. |
 
 ---
 
@@ -190,6 +193,23 @@ Each directory contains a `SKILL.md` with detailed instructions and a `SKILL_MET
 | `tech-stack-evaluator` | Technology selection: evaluating frameworks, libraries, and platforms against project requirements |
 | `test-qa-engineer` | Test engineering: unit/integration/e2e test authoring, mocking, coverage analysis |
 | `threat-detection` | Threat detection engineering: SIEM rules, anomaly detection, log analysis, incident triage |
+
+---
+
+## Mission Mode — Long Goals That Check Themselves
+
+For goals bigger than a handful of tasks, the dev agents and RBG_Runner run a **mission**:
+
+| Role | Agent | What it does |
+|---|---|---|
+| Planner | `Orchestrator` (+ read-only child planners) | Asks only the questions that change the plan, writes a **validation contract** (numbered assertions defining "done") before any work, groups tasks into **milestones**, re-plans at every milestone |
+| Workers | domain sub-agents | One task each with clean context; every output ends with a `=== HANDOFF ===` block (completed, not done, commands + exit codes, files, issues, assertions, procedure) |
+| Task validator | `grounded_review` (GLM 5.3) | Checks each task against its assertions and handoff; the worker's own "done" is a claim, not evidence |
+| Milestone validators | scrutiny: tests/types/lint + a fresh `grounded_review` per task · behavior: `user_testing_validator` (GLM 5.3 Flash) or `grounded_review` contract mode for non-code work | Does the milestone actually work end to end? |
+
+Flow: **SCOPE → PLAN (contract + milestones) → approve → per task: planner → worker → validator → at each milestone: scrutiny + behavior validation → REPLAN** (continue / follow-up fixes / rescope with approval / escalate when the budget runs out) → repeat until every `must` assertion passes.
+
+Progress is visible at a glance in `RBG_mission.md` / `BD_mission.md` at the project root (RBG_Runner keeps its missions in `.opencode/memory/missions/`). Writers run one at a time; only read-only work (planners, validators, research) runs in parallel. Validators use a different model family from most workers so they don't share blind spots.
 
 ---
 
@@ -395,7 +415,7 @@ Running `rgb_runner.py` more frequently than your agents' cron schedules is safe
 ---
 name: my_agent
 description: "Sub-agent · What this agent does"
-model: nvidia-custom/nvidia/nemotron-3.5-lightning-30b-a3b
+model: nvidia/nvidia/nemotron-3.5-lightning-30b-a3b
 mode: subagent
 temperature: 0.2
 tools:
@@ -424,6 +444,8 @@ tools:
 
 3. Restart OpenCode. RBG_Runner discovers new agents automatically on the next run.
 
+**Agent IDs = file names.** OpenCode registers each agent under its file name without `.md` (`agents/10_finance.md` → `10_finance`), not under the `name:` line. Use that ID when a primary agent calls it through the `task` tool (`subagent_type`) or from the CLI (`opencode run --agent 10_finance …`); `rgb_runner.py` maps workflow.json keys to IDs for you. If you add an agent, also add it to the *Agent IDs* table in each primary agent's "How to Call a Sub-agent" section.
+
 ---
 
 ## Security
@@ -439,16 +461,50 @@ tools:
 
 ## Provider Configuration
 
-The toolkit uses NVIDIA's free model catalogue via the `nvidia-custom` provider:
+The toolkit uses NVIDIA's free model catalogue. Agents use OpenCode's built-in `nvidia` provider (`model: nvidia/<NVIDIA model id>` — so most IDs start `nvidia/nvidia/…`; key from `NVIDIA_API_KEY`); the `nvidia-custom` provider in `opencode.jsonc` points at the same endpoint. Latencies from a live test on 2026-09-24:
 
 | Model | Best For |
 |---|---|
-| `nvidia/nemotron-3-ultra-550b-a55b` | Orchestration, complex reasoning, planning |
-| `nvidia/nemotron-3.5-lightning-30b-a3b` | Fast sub-agent tasks, code generation |
-| `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | Structured reasoning, chain-of-thought |
-| `google/gemma-4-31b-it` | Instruction following, summarisation |
-| `meta/muse-glimmer-30b` | Creative content, social copy |
-| `z-ai/glm-5.3` | Multilingual tasks |
+| `nvidia/nvidia/nemotron-3.5-super-vl-120b-a12b` | Orchestrator, RBG_Runner, idea/business/research agents, grounded_review, user_testing_validator, tot_controller, linkedin |
+| `nvidia/nvidia/nemotron-3-ultra-550b-a55b` | code_generation (~5–13s) |
+| `nvidia/nvidia/nemotron-3.5-lightning-30b-a3b` | deployment, ads_management, customer_support (~5s) |
+| `nvidia/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` | finance (~4s) |
+| `nvidia/meta/muse-glimmer-30b` | social_media, email_outreach (~8–16s) |
+| `nvidia/z-ai/glm-5.3` | backup for planners and validators (~5–11s) |
+| `nvidia/openai/gpt-oss-20b` | backup validator / coder (~8s) |
+
+`nvidia/nvidia/nemotron-3-super-120b-a12b` was retired by NVIDIA on 2026-10-30 ("Model unavailable") and removed from every agent and backup list.
+
+**Backup models:** OpenCode allows one model per agent, so each agent's ordered backup list lives in `agents/workflow.json` → `model_fallbacks`. `rgb_runner.py` and the agents retry with the next model when one is retired (410), missing (404), rate-limited (429) or times out. `heal_models.ps1` rewrites each agent's `model:` line to the first working model in its list — run it after a test shows a dead model, or weekly.
+
+### Image generation (FLUX.3 Image Klein + automatic fallback)
+
+`agents/13_image_generation.md` calls `tools/nvidia_image_gen.py` (standard-library Python, copy `tools/` to `~/.config/opencode/tools/`). It reads the key from `NVIDIA_API_KEY` or OpenCode's key store and never prints it.
+
+```bash
+python ~/.config/opencode/tools/nvidia_image_gen.py --prompt "a red fox in fresh snow at dawn" --width 1568 --height 672 --out fox.jpg
+python ~/.config/opencode/tools/test_nvidia_image_gen.py     # full live test, report in tools/_image_test/
+```
+
+Verified live on 2026-10-30: endpoint `…/genai/black-forest-labs/flux-3-image-klein` (the `flux.3-…` form returns 404); width/height any multiple of 16 from 512 to 1568; steps 1–50; seed 0 = random, same seed = identical image; one JPEG per call in `artifacts[0].base64`; typical 3–15 s. Image editing with your own picture is **not** available on the hosted API (it only accepts NVIDIA's sample images).
+
+**Fallback chain** (`python tools/nvidia_image_gen.py --list-models`): FLUX.3 Image Klein → FLUX.2 Klein 4B (same sizes, 1–4 steps, 3–5 s). Each model gets one same-model retry on 429/5xx/timeout, then the next model is tried on timeout, 404/410, 429, 5xx or an empty image; a 422 or a content-filter result stops immediately. Every request has a hard deadline (`--timeout`, default 120 s) because NVIDIA's gateway can hold a connection open without answering. Override the order with `--models a,b` or `NVIDIA_IMAGE_MODELS`, or pin one model with `--model`.
+
+Probed on 2026-10-30 (`tools/probe_nvidia_image_models.py`): `flux.1-dev` and `flux.1-schnell` never answered (kept as opt-in only); `flux-3-image-klein-base`, `stable-diffusion-3.5-large`, `stable-diffusion-3-medium`, `stable-diffusion-xl`, `sdxl-turbo`, `qwen-image`, `qwen-image-2512` and `baidu/ernie-image` returned 404 for this account. Re-run the probe to re-check; `tools/test_image_fallback.py` re-tests the fallback.
+
+### Keeping models healthy
+
+NVIDIA retires models often (a 2026-09-24 test found ~half the catalog returning 410 "end of life"). Two scripts (in `tools/` here; copy them next to `opencode.jsonc` in `~/.config/opencode/`):
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+& "$env:USERPROFILE\.config\opencode\test_models.ps1" -OnlyToolkit -Parallel 5   # which of the agents' models answer, and how fast
+& "$env:USERPROFILE\.config\opencode\heal_models.ps1" -DryRun                    # what would change
+& "$env:USERPROFILE\.config\opencode\heal_models.ps1"                            # point each agent at its first working model
+python "$env:USERPROFILE\.config\opencode\agents\rgb_runner.py" --check-models  # same check from the Python runner
+```
+
+`heal_models.ps1` only rewrites the `model:` line, backs changed files up to `_model_heal_backup\<timestamp>\` (outside `agents\`, so OpenCode never loads the copies), and moves agents back to their primary model once it works again. Restart OpenCode after it changes anything.
 
 All models are accessed through `https://integrate.api.nvidia.com/v1` using your `NVIDIA_API_KEY`.
 
@@ -461,6 +517,10 @@ All models are accessed through `https://integrate.api.nvidia.com/v1` using your
 **NVIDIA API 401 errors** — Verify `NVIDIA_API_KEY` is set in your environment (`echo %NVIDIA_API_KEY%` on Windows). Key must start with `nvapi-`.
 
 **"workflow.json not found"** — Run `python rgb_runner.py --init` to scaffold a default from your agents/ directory.
+
+**`Unknown agent: <name>` when a primary agent calls a sub-agent** — it sent the short name instead of the agent ID. IDs are file names (`10_finance`, `01_orchestrator`, …); see *Adding Your Own Agents*.
+
+**`Model "…" is not available` / `Model unavailable` on a sub-agent call** — either the caller passed a model in the `task` call (it must not; each agent's own `model:` line is used) or the model was retired. Run `heal_models.ps1`, or update the agent's `model:` line and its list in `workflow.json → model_fallbacks`.
 
 **croniter not installed** — Install with: `pip install croniter python-dateutil pyyaml`
 

@@ -33,6 +33,8 @@ Usage examples:
   python rgb_runner.py --bypass                                 # skip all approval gates (autonomous)
   python rgb_runner.py --bypass --cycles 5 --interval 30       # bypass + explicit schedule
   python rgb_runner.py --agent idea_planner                     # force-run one agent (single)
+  python rgb_runner.py --agent finance --message "Analyse Q3"   # force-run with a specific task
+  python rgb_runner.py --check-models                           # test every agent's model chain, no agent runs
   python rgb_runner.py --dry-run                                # show what would run, no execution
   python rgb_runner.py --list                                   # list agents + readiness
   python rgb_runner.py --init                                   # scaffold workflow.json
@@ -47,6 +49,8 @@ import json
 import logging
 import os
 import re
+import shutil
+import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
@@ -496,26 +500,175 @@ def run_single_cycle(
     return results, evaluated, selected
 
 
-def _invoke_agent(name: str, config: dict, dry_run: bool) -> str:
-    """
-    Hook: trigger one agent. Replace the body of this function with your
-    actual OpenCode CLI invocation.
+# ── Model fallback ─────────────────────────────────────────────────────────
+# OpenCode allows one model per agent. workflow.json → model_fallbacks holds an
+# ordered backup list per agent; we pass each model explicitly with `-m` and move
+# to the next one only when the failure is about the MODEL (retired, missing,
+# rate-limited, timed out, server error) — never when the agent itself failed.
 
-    Example using the opencode CLI:
-        import subprocess
-        result = subprocess.run(
-            ["opencode", "run", "--agent", name],
-            capture_output=True, text=True, timeout=300
-        )
-        return "completed" if result.returncode == 0 else "failed"
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+MODEL_GONE_RE = re.compile(          # definitely the model's fault
+    r"\b410\b|\bGone\b|end of life|no longer available|model not found|ModelNotFound|"
+    r"unknown model|not found for account|\b50[0-4]\b|Internal Server Error|Bad Gateway|"
+    r"Service Unavailable|Gateway Timeout",
+    re.IGNORECASE,
+)
+GENERIC_NOT_FOUND_RE = re.compile(r"\b404\b|Not Found", re.IGNORECASE)
+RATE_LIMIT_RE = re.compile(r"\b429\b|rate limit|too many requests", re.IGNORECASE)
+ERROR_LINE_RE = re.compile(r"^\s*Error:", re.MULTILINE)
+AGENT_NOT_FOUND_RE = re.compile(r"agent[^\n]{0,60}not found|no agent named|unknown agent", re.IGNORECASE)
+
+DEFAULT_MESSAGE = ""          # set from --message in main()
+LAST_MODEL_USED: dict[str, str] = {}
+
+
+def _workflow_raw() -> dict:
+    return load_workflow(WORKFLOW_FILE) if WORKFLOW_FILE.exists() else {}
+
+
+def model_chain(name: str, config: dict, workflow: Optional[dict] = None) -> list[str]:
+    """Ordered models to try for an agent: entry-level `models`, else model_fallbacks[name]."""
+    workflow = workflow if workflow is not None else _workflow_raw()
+    chain = config.get("models") or workflow.get("model_fallbacks", {}).get(name) or []
+    seen: list[str] = []
+    for m in chain:
+        if m and m not in seen:
+            seen.append(m)
+    return seen
+
+
+def _opencode_binary() -> Optional[str]:
+    return shutil.which("opencode")
+
+
+def classify_opencode_result(returncode: Optional[int], output: str) -> str:
+    """Return 'ok' | 'model_unavailable' | 'rate_limited' | 'timeout' | 'failed'."""
+    if returncode is None:
+        return "timeout"
+    text = ANSI_RE.sub("", output or "")
+    has_error = returncode != 0 or bool(ERROR_LINE_RE.search(text))
+    if not has_error:
+        return "ok" if text.strip() else "model_unavailable"   # empty answer -> try next model
+    if RATE_LIMIT_RE.search(text):
+        return "rate_limited"
+    if MODEL_GONE_RE.search(text):
+        return "model_unavailable"
+    if AGENT_NOT_FOUND_RE.search(text):
+        return "failed"                    # wrong agent name - another model won't help
+    if GENERIC_NOT_FOUND_RE.search(text):
+        return "model_unavailable"
+    return "failed"
+
+
+def run_opencode(args: list[str], timeout: int) -> tuple[Optional[int], str]:
+    """Run one `opencode` command. Returns (returncode or None on timeout, combined output)."""
+    try:
+        proc = subprocess.run(args, capture_output=True, text=True, encoding="utf-8",
+                              errors="replace", timeout=timeout)
+        return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+    except subprocess.TimeoutExpired as e:
+        out = e.stdout.decode("utf-8", "replace") if isinstance(e.stdout, bytes) else (e.stdout or "")
+        return None, out
+
+
+def invoke_with_fallback(name: str, message: str, chain: list[str], timeout: int = 300,
+                         rate_limit_wait: int = 15, rate_limit_retries: int = 1,
+                         runner=run_opencode, binary: Optional[str] = None) -> tuple[str, Optional[str], list[dict]]:
     """
+    Try each model in `chain` for agent `name`. Returns (status, model_used, attempts).
+    status: 'completed' | 'failed'. An empty chain runs once with the agent's own model.
+    """
+    binary = binary or _opencode_binary()
+    attempts: list[dict] = []
+    if not binary:
+        log.error("`opencode` CLI not found on PATH - cannot run %s", name)
+        return "failed", None, [{"model": None, "result": "opencode not found"}]
+
+    for model in (chain or [None]):
+        tries = 0
+        while True:
+            cmd = [binary, "run", "--agent", name]
+            if model:
+                cmd += ["-m", model]
+            cmd.append(message)
+            code, out = runner(cmd, timeout)
+            result = classify_opencode_result(code, out)
+            tail = ANSI_RE.sub("", out or "").strip().splitlines()[-1:] or [""]
+            attempts.append({"model": model, "result": result, "detail": tail[0][:200]})
+            if result == "rate_limited" and tries < rate_limit_retries:
+                tries += 1
+                log.warning("  %s rate-limited on %s - waiting %ss and retrying", name, model, rate_limit_wait)
+                time.sleep(rate_limit_wait)
+                continue
+            break
+        if result == "ok":
+            if model and chain and model != chain[0]:
+                log.warning("  %s ran on BACKUP model %s (primary %s unavailable)", name, model, chain[0])
+            return "completed", model, attempts
+        if result == "failed":
+            log.error("  %s failed on %s (not a model problem - not trying backups): %s", name, model, tail[0])
+            return "failed", model, attempts
+        log.warning("  %s: model %s -> %s - trying next model", name, model, result)
+    return "failed", None, attempts
+
+
+def _invoke_agent(name: str, config: dict, dry_run: bool) -> str:
+    """Trigger one agent through the OpenCode CLI, walking its model fallback chain."""
+    workflow = _workflow_raw()
+    chain = model_chain(name, config, workflow)
     if dry_run:
-        log.info("[DRY-RUN] Would trigger: %s (%s)", name, config.get("file", ""))
+        log.info("[DRY-RUN] Would trigger: %s (%s) models: %s", name, config.get("file", ""),
+                 " -> ".join(chain) if chain else "agent default")
         return "dry-run"
-    log.info("Triggering agent: %s", name)
-    # ↓ Replace this stub with your real invocation ↓
-    log.info("  (stub — wire your OpenCode CLI call here)")
-    return "completed"
+    policy = workflow.get("model_policy", {})
+    message = (config.get("message") or DEFAULT_MESSAGE or
+               f"Scheduled run of {name} by RBG_Runner. Read the project README and "
+               f".opencode/rules/rules.md, do your standard task for this project, and end "
+               f"with your === HANDOFF === block.")
+    # OpenCode registers agents by FILE NAME (e.g. "10_finance"), not by the `name:` frontmatter,
+    # so the CLI must get the file stem; workflow.json keys stay the short names.
+    agent_id = Path(os.path.expanduser(str(config.get("file") or f"{name}.md"))).stem or name
+    log.info("Triggering agent: %s (OpenCode agent id: %s)", name, agent_id)
+    status, model, attempts = invoke_with_fallback(
+        agent_id, message, chain,
+        timeout=int(config.get("timeout_secs", policy.get("timeout_secs", 300))),
+        rate_limit_wait=int(policy.get("rate_limit_wait_secs", 15)),
+        rate_limit_retries=int(policy.get("retry_same_model_on_rate_limit", 1)),
+    )
+    LAST_MODEL_USED[name] = model or ""
+    for a in attempts:
+        log.info("    attempt: %-50s %s %s", a["model"] or "(agent default)", a["result"],
+                 "" if a["result"] == "ok" else a.get("detail", ""))
+    return status
+
+
+def check_models(workflow: dict, parallel: int = 3, timeout: int = 90) -> dict[str, str]:
+    """Ping every model referenced in model_fallbacks once. Returns {model: result}."""
+    from concurrent.futures import ThreadPoolExecutor
+    binary = _opencode_binary()
+    if not binary:
+        print("`opencode` CLI not found on PATH.")
+        return {}
+    models = sorted({m for chain in workflow.get("model_fallbacks", {}).values() for m in chain})
+
+    def ping(m: str) -> tuple[str, str]:
+        code, out = run_opencode([binary, "run", "-m", m, "Reply with exactly: OK"], timeout)
+        r = classify_opencode_result(code, out)
+        if r == "ok" and not re.search(r"\bOK\b", ANSI_RE.sub("", out)):
+            r = "unexpected_output"
+        return m, r
+
+    with ThreadPoolExecutor(max_workers=max(1, parallel)) as pool:
+        results = dict(pool.map(ping, models))
+    print("\nModel health:")
+    for m in models:
+        print(f"  {m:55s} {results[m]}")
+    print("\nAgent chains (first working model is what the agent will get):")
+    for agent, chain in workflow.get("model_fallbacks", {}).items():
+        first = next((m for m in chain if results.get(m) == "ok"), None)
+        flag = "OK    " if first == chain[0] else ("BACKUP" if first else "NONE  ")
+        print(f"  [{flag}] {agent:24s} -> {first or 'no working model!'}")
+    return results
 
 
 # ── Background Loop ────────────────────────────────────────────────────────
@@ -851,6 +1004,10 @@ Examples:
     # Single-run / force
     parser.add_argument("--agent", metavar="NAME",
                         help="Force-trigger one specific agent (skips schedule/cooldown checks)")
+    parser.add_argument("--message", default="", metavar="TEXT",
+                        help="Task text passed to the agent(s) (default: a standard scheduled-run instruction)")
+    parser.add_argument("--check-models", action="store_true",
+                        help="Test every model in workflow.json → model_fallbacks and show each agent's first working model")
     parser.add_argument("--dry-run", action="store_true",
                         help="Show which agents would run without triggering them")
     parser.add_argument("--trigger", default="on-demand",
@@ -888,6 +1045,13 @@ Examples:
                         help="Scaffold workflow.json from the agents/ directory")
 
     args = parser.parse_args()
+
+    global DEFAULT_MESSAGE
+    DEFAULT_MESSAGE = args.message
+
+    if args.check_models:
+        results = check_models(load_workflow(WORKFLOW_FILE))
+        sys.exit(0 if results and all(v == "ok" for v in results.values()) else 1)
 
     if args.init:
         if WORKFLOW_FILE.exists():
